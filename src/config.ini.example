@@ -1,0 +1,18 @@
+[general]
+bits = 16
+rate = 44100
+length = 60
+channels = 2
+
+[sinwave1]
+type = sinwave
+channels = 1,2
+frequency = 440.0
+amplitude = 1
+
+[noise1]
+type = white_noise
+channels = 1,2
+amplitude = 0.00005
+seed = 1243254
+

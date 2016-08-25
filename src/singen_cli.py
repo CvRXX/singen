@@ -12,33 +12,53 @@
 #import random
 import argparse
 #from itertools import *
+import ConfigParser
+import os.path
+from shutil import copyfile
+import collections
 
 
 from wavtools import *
 from generators import *
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--channels', help="Number of channels to produce", default=2, type=int)
-    parser.add_argument('-b', '--bits', help="Number of bits in each sample", choices=(16,), default=16, type=int)
-    parser.add_argument('-r', '--rate', help="Sample rate in Hz", default=44100, type=int)
-    parser.add_argument('-t', '--time', help="Duration of the wave in seconds.", default=60, type=int)
-    parser.add_argument('-a', '--amplitude', help="Amplitude of the wave on a scale of 0.0-1.0.", default=0.5, type=float)
-    parser.add_argument('-f', '--frequency', help="Frequency of the wave in Hz", default=440.0, type=float)
+    parser.add_argument('-c', '--config', help="The config file to be used", default='config.ini')
     parser.add_argument('filename', help="The file to generate.")
     args = parser.parse_args()
+    
+    if not os.path.isfile(args.config):
+        print("No config found, creating one...")
+        copyfile('config.ini.example', 'config.ini')
 
+    config = ConfigParser.ConfigParser()
+    config.read(args.config)
+    channels = [[] for i in range(int(config.get('general','channels')))]
+    if not 'general' in config.sections():
+        raise ValueError('No general section in the config')
+    
+    for section in config.sections():
+        if section == 'general':
+            continue
+        for channel in config.get(section,'channels').split(','):
+            if config.get(section,'type') == 'sinwave':
+               channels[int(channel)-1].append(sine_wave.generate(float(config.get(section,'frequency')), int(config.get('general','rate')), float(config.get(section,'amplitude'))))
+            if config.get(section,'type') == 'white_noise':
+                channels[int(channel)-1].append(white_noise.generate(config.get(section,'amplitude'),config.get(section,'seed')))
+
+
+    print channels
     # each channel is defined by infinite functions which are added to produce a sample.
-    channels = ((sine_wave.generate(args.frequency, args.rate, args.amplitude),) for i in range(args.channels))
+    #channels = ((sine_wave.generate(args.frequency, args.rate, args.amplitude),) for i in range(args.channels))
 
     # convert the channel functions into waveforms
-    samples = sample_prep.compute_samples(channels, args.rate * args.time)
+    samples = sample_prep.compute_samples(channels, int(config.get('general','rate')) * int(config.get('general','length')))
 
     # write the samples to a file
-    if args.filename == '-':
-        filename = sys.stdout
-    else:
-        filename = args.filename
-    writer.write(filename, samples, args.rate * args.time, args.channels, args.bits / 8, args.rate)
+    #if args.filename == '-':
+    #    filename = sys.stdout
+    #else:
+    filename = args.filename
+    writer.write(filename, samples, int(config.get('general','rate')) * int(config.get('general','length')), int(config.get('general','channels')), int(config.get('general','bits')) / 8, int(config.get('general','rate')))
 
 if __name__ == "__main__":
     main()

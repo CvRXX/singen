@@ -4,7 +4,9 @@
           http://www.boost.org/LICENSE_1_0.txt)
 '''
 
-def white_noise(amplitude=0.5):
+from itertools import *
+import random
+def generate(amplitude=0.5, seed=random.random()):
     '''
     Generate random samples.
     '''
