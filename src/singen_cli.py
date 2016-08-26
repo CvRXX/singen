@@ -21,18 +21,24 @@ import collections
 from wavtools import *
 from generators import *
 def main():
+    #parse all of the arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', help="The config file to be used", default='config.ini')
     parser.add_argument('filename', help="The file to generate.")
     args = parser.parse_args()
     
+    #check if a config file exists, if not, create one from the example.
     if not os.path.isfile(args.config):
         print("No config found, creating one...")
         copyfile('config.ini.example', 'config.ini')
 
+    #read out the config file.
     config = ConfigParser.ConfigParser()
     config.read(args.config)
+    
+    #where the samples will be stored.
     channels = [[] for i in range(int(config.get('general','channels')))]
+    
     if not 'general' in config.sections():
         raise ValueError('No general section in the config')
     
@@ -41,12 +47,11 @@ def main():
             continue
         for channel in config.get(section,'channels').split(','):
             if config.get(section,'type') == 'sinwave':
-               channels[int(channel)-1].append(sine_wave.generate(float(config.get(section,'frequency')), int(config.get('general','rate')), float(config.get(section,'amplitude'))))
+               channels[int(channel)-1].append(sine_wave.generate(float(config.get(section,'frequency')), int(config.get('general','rate')), float(config.get(section,'amplitude')),float(config.get(section,'shift'))))
             if config.get(section,'type') == 'white_noise':
                 channels[int(channel)-1].append(white_noise.generate(config.get(section,'amplitude'),config.get(section,'seed')))
 
 
-    print channels
     # each channel is defined by infinite functions which are added to produce a sample.
     #channels = ((sine_wave.generate(args.frequency, args.rate, args.amplitude),) for i in range(args.channels))
 
