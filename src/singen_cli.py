@@ -5,13 +5,7 @@
 '''
 
 #!/usr/bin/env python
-#import sys
-#import wave
-#import math
-#import struct
-#import random
 import argparse
-#from itertools import *
 import ConfigParser
 import os.path
 from shutil import copyfile
@@ -39,9 +33,11 @@ def main():
     #where the samples will be stored.
     channels = [[] for i in range(int(config.get('general','channels')))]
     
+    #check if a general section excists in the config
     if not 'general' in config.sections():
         raise ValueError('No general section in the config')
     
+    #check each section for known types and add it to the specified channels
     for section in config.sections():
         if section == 'general':
             continue
@@ -51,19 +47,11 @@ def main():
             if config.get(section,'type') == 'white_noise':
                 channels[int(channel)-1].append(white_noise.generate(config.get(section,'amplitude'),config.get(section,'seed')))
 
-
-    # each channel is defined by infinite functions which are added to produce a sample.
-    #channels = ((sine_wave.generate(args.frequency, args.rate, args.amplitude),) for i in range(args.channels))
-
     # convert the channel functions into waveforms
     samples = sample_prep.compute_samples(channels, int(config.get('general','rate')) * int(config.get('general','length')))
-
-    # write the samples to a file
-    #if args.filename == '-':
-    #    filename = sys.stdout
-    #else:
-    filename = args.filename
-    writer.write(filename, samples, int(config.get('general','rate')) * int(config.get('general','length')), int(config.get('general','channels')), int(config.get('general','bits')) / 8, int(config.get('general','rate')))
+    print("Generating the file....")
+    print("This could take a while.")
+    writer.write(args.filename, samples, int(config.get('general','rate')) * int(config.get('general','length')), int(config.get('general','channels')), int(config.get('general','bits')) / 8, int(config.get('general','rate')))
 
 if __name__ == "__main__":
     main()
